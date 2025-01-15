@@ -1,0 +1,40 @@
+{
+    "1328912044564418583": {
+        "question": "asdasdsa",
+        "options": [
+            "sad",
+            "asd"
+        ],
+        "vote_counts": {
+            "0": 0,
+            "1": 1
+        },
+        "duration": 15,
+        "channel_id": 1243214596089712783,
+        "message_id": 1328912046372294729,
+        "end_time": 1736907736,
+        "guild_name": "testing server",
+        "user_votes": {
+            "615903606914416660": 1
+        }
+    },
+    "1328912767654035486": {
+        "question": "dfgfd",
+        "options": [
+            "dfgfd",
+            "fgf"
+        ],
+        "vote_counts": {
+            "0": 1,
+            "1": 0
+        },
+        "duration": 15,
+        "channel_id": 1243214596089712783,
+        "message_id": 1328912769151402006,
+        "end_time": 1736907909,
+        "guild_name": "testing server",
+        "user_votes": {
+            "615903606914416660": 0
+        }
+    }
+}

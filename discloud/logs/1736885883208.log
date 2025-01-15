@@ -1,0 +1,8 @@
+
+------------------------------------------------------------
+Tue Jan 14 2025 22:17:51 GMT+0100 (GMT+01:00)
+
+2025-01-14T20:18:58.043929446Z  [30;1m2025-01-14 17:18:58[0m [34;1mINFO    [0m [35mdiscord.client[0m logging in using static token
+2025-01-14T20:18:59.027917020Z  [30;1m2025-01-14 17:18:59[0m [34;1mINFO    [0m [35mdiscord.gateway[0m Shard ID None has connected to Gateway (Session ID: 5111cc92d9331d92da01c3647dc364a6).
+2025-01-14T20:19:01.035656921Z  Logged in as CodeCraft Community
+2025-01-14T20:19:01.291508625Z  synced 7 commands
