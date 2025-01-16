@@ -7,14 +7,16 @@ import asyncio
 import os, json
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone 
+from roles import roles_embed, ButtonsView
 
 
-bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
+bot = commands.Bot(command_prefix="!" ,intents=discord.Intents.all())
 load_dotenv()
-TOKEN = os.getenv("TOKEN") # Main Bot Token
-#TOKEN= os.getenv("TEST_TOKEN") # Test Bot Token
+
+#TOKEN = os.getenv("TOKEN") # Main Bot Token
+TOKEN= os.getenv("TEST_TOKEN") # Test Bot Token
 POLL_DATA_FILE = "polls.json"
-TARGET_CHANNEL_ID = 1328815353651925142 # to change its name to members count
+TARGET_CHANNEL_ID: str | None = int(os.getenv("TARGET_CHANNEL_ID")) # to change its name to members count
 
 
 
@@ -27,6 +29,7 @@ async def on_ready():
         bot.loop.create_task(update_member_count())
         activity = discord.Activity(type=discord.ActivityType.watching, name="CodeCraft community")
         await bot.change_presence(activity=activity)
+        bot.add_view(ButtonsView())
 
     except Exception as e:
         print(e)
@@ -100,6 +103,8 @@ async def update_member_count():
         await asyncio.sleep(300)  # Wait for 5 minutes (300 seconds)
 
 polls = load_polls()
+
+bot.tree.add_command(roles_embed)
 
 # Create the slash command for the poll with customizable options and duration
 @bot.tree.command(name="vote", description="Start a voting poll with results and duration!")
@@ -443,7 +448,7 @@ async def get_joke(interaction: discord.Interaction) -> None:
     await interaction.response.send_message(embed=embed)
 
 @bot.tree.command(name="fact", description="get some cool facts about programming")
-async def get_random_fact(interaction: discord.Interaction):
+async def get_random_fact(interaction: discord.Interaction) -> None:
     random_facts = [
     "The first computer programmer was Ada Lovelace in the 1840s, even before computers existed as we know them.",
     "The first high-level programming language was Fortran, developed in 1957.",
@@ -489,4 +494,5 @@ async def get_random_fact(interaction: discord.Interaction):
     
     await interaction.response.send_message(embed=embed)
 
-bot.run(TOKEN)
+if __name__ == '__main__':
+    bot.run(TOKEN)

@@ -1,2 +1,31 @@
 *.env 
 .env/
+__pycache__/
+*.pyc
+discloud/
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+s
+# Virtual environment
+venv/
+env/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Local development settings
+instance/
+.pytest_cache/
+coverage.xml
+*.cover
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
