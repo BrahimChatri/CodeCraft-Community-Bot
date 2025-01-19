@@ -7,6 +7,8 @@ bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 load_dotenv()
 
+DATA_FILE = "polls.json"
+ALLOWED_USER_ID = 615903606914416660
 alx_backend_role_id = int(os.getenv("alx_backend_role_id"))
 alx_frontend_role_id = int(os.getenv("alx_frontend_role_id"))
 
@@ -22,10 +24,24 @@ class RoleButton(discord.ui.Button):
 
         if role in member.roles:
             await member.remove_roles(role)
-            await interaction.response.send_message(f"Role **{role.name}** removed!", ephemeral=True)
+            embed = discord.Embed(
+                title=f"Role {role.name}",
+                description=f" ❌ You have successfully removed the role **{role.name}**.",
+                color=discord.Color.red()
+            )
+            embed.set_thumbnail(url=interaction.guild.icon.url)
+            embed.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon.url)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
             await member.add_roles(role)
-            await interaction.response.send_message(f"Role **{role.name}** added!", ephemeral=True)
+            embed = discord.Embed(
+                title=f"Role {role.name}",
+                description=f" ✅ You have successfully added the role **{role.name}**.",
+                color=discord.Color.red()
+            )
+            embed.set_thumbnail(url=interaction.guild.icon.url)
+            embed.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon.url)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
 class ButtonsView(discord.ui.View):
     def __init__(self):
@@ -50,16 +66,48 @@ async def roles_embed(interaction: discord.Interaction):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    # Create embed
     embed = discord.Embed(
         title="React to get a role",
         description="Click on the buttons below to add roles.",
-        color=discord.Color.blue()
+        color=discord.Color.brand_green()
     )
-    embed.set_footer(text=f"{interaction.guild.name}")
+    embed.set_thumbnail(url=interaction.guild.icon.url)
+    embed.set_footer(text=f"{interaction.guild.name}", icon_url=interaction.guild.icon.url)
 
     # Send the embed with the view
     await interaction.response.send_message(embed=embed, view=ButtonsView())
 
+@bot.tree.command(name="file", description="This command is restricted to the Owner !!")  
+async def show_data(interaction: discord.Interaction):
+    guild = interaction.guild
+    member = guild.get_member(interaction.user.id)
+    
+    # Check if the user is allowed to use this command
+    if member and member.id == ALLOWED_USER_ID:
+        try:
+            # Defer the response to handle delays
+            await interaction.response.defer(ephemeral=True)
+            
+            # Open and send the file
+            with open(DATA_FILE, 'rb') as file:
+                await interaction.followup.send(
+                    content="**__Here is your file:__**",
+                    file=discord.File(file)
+                )
+        except FileNotFoundError:
+            await interaction.followup.send(
+                content="An error occurred: File not found.",
+                ephemeral=True
+            )
+        except Exception as e:
+            await interaction.followup.send(
+                content=f"An error occurred: {str(e)}",
+                ephemeral=True
+            )
+    else:
+        await interaction.response.send_message(
+            content="You don't have permission to use this command. Only the Owner can use it.",
+            ephemeral=True
+        )
 
 __all__=["roles_embed", "ButtonsView"]
