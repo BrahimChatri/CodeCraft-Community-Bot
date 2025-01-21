@@ -57,8 +57,8 @@ class EmbedModal(discord.ui.Modal):
         self.title_input = discord.ui.TextInput(label='Title', required=True)
         self.description_input = discord.ui.TextInput(label='Description', style=discord.TextStyle.paragraph, required=True)
         self.image_url_input = discord.ui.TextInput(label='Image URL', required=False)
-        self.thumbnail = discord.ui.TextInput(label='"yes" To set server icon as Thumbnail', required=False)
-        self.fields_input = discord.ui.TextInput(label='Fields (name:value,...)', style=discord.TextStyle.paragraph, required=False)
+        self.thumbnail = discord.ui.TextInput(label='"yes" To set server icon or enter url', required=False)
+        self.fields_input = discord.ui.TextInput(label='Fields (name:value|...)', style=discord.TextStyle.paragraph, required=False)
 
         self.add_item(self.title_input)
         self.add_item(self.description_input)
@@ -75,13 +75,15 @@ class EmbedModal(discord.ui.Modal):
         )
         if self.thumbnail.value.lower() == "yes" :
             embed.set_thumbnail(url=interaction.guild.icon.url)
+        elif self.thumbnail.value.lower().startswith(('http://', 'https://')):
+            embed.set_thumbnail(url=self.thumbnail.value)
         embed.set_footer(text="CodeCraft Community",icon_url=interaction.guild.icon.url)
 
         if self.image_url_input.value:
             embed.set_image(url=self.image_url_input.value)
 
         if self.fields_input.value:
-            field_pairs = self.fields_input.value.split(',')
+            field_pairs = self.fields_input.value.split('|')
             for pair in field_pairs:
                 name, value = pair.split(':', 1)
                 embed.add_field(name=name.strip(), value=value.strip(), inline=False)
