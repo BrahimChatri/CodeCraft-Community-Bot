@@ -25,7 +25,8 @@ instance/
 coverage.xml
 *.cover
 *.log
-
+user_data.json
+polls.json
 # System files
 .DS_Store
 Thumbs.db
