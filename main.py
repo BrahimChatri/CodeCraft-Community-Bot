@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands, tasks
 from discord.ui import  Button, View
 import random
-import asyncio
+import asyncio, aiohttp, time
 import os, json
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone 
@@ -17,6 +17,7 @@ load_dotenv()
 TOKEN= os.getenv("TEST_TOKEN") # Test Bot Token
 POLL_DATA_FILE = "polls.json"
 TARGET_CHANNEL_ID: str | None = int(os.getenv("TARGET_CHANNEL_ID")) # to change its name to members count
+JOKES_API = "https://v2.jokeapi.dev/joke/"
 
 
 
@@ -402,52 +403,83 @@ async def play_card_game(interaction: discord.Interaction):
 
     await interaction.followup.send(f"You reached the maximum number of attempts! The correct card was {chosen_rank} of {chosen_suit}.")
 
-@bot.tree.command(name="joke", description="Get a random joke about programming")
-async def get_joke(interaction: discord.Interaction) -> None:
-    jokes = [
-    "Why do programmers prefer dark mode? Because light attracts bugs!",
-    "How many programmers does it take to change a light bulb? None. That's a hardware problem.",
-    "Why do Java developers wear glasses? Because they can't C#.",
-    "Why was the JavaScript developer sad? Because he didn’t know how to ‘null’ his feelings.",
-    "What’s a programmer’s favorite hangout place? The Foo Bar.",
-    "Why was the developer broke? Because he used up all his cache.",
-    "Why do programmers hate nature? It has too many bugs.",
-    "Why did the programmer quit his job? He didn't get arrays.",
-    "What do you call 8 hobbits? A hobbyte.",
-    "Why do Python programmers prefer using 'hex()'? Because they can C in it.",
-    "How do functions break up? They stop calling each other!",
-    "Why was the developer afraid of the database? Too many foreign keys.",
-    "Why do programmers confuse Halloween and Christmas? Because Oct 31 == Dec 25.",
-    "Why did the coder take a break? Because they needed to debug their life.",
-    "What do you get when you cross a computer with an elephant? Lots of memory.",
-    "Why do programmers love coffee? Because it's their source code.",
-    "How does a computer get drunk? It takes screenshots.",
-    "Why don’t programmers like to code in the forest? Too many trees.",
-    "How do you comfort a JavaScript bug? You console it.",
-    "What’s a programmer’s favorite type of music? Algo-rhythms.",
-    "Why did the software developer go broke? He lost his domain in a crash.",
-    "Why don’t programmers trust numbers? They start at zero.",
-    "Why was the coder always calm? They knew how to handle exceptions.",
-    "What’s a programmer’s favorite exercise? Loops.",
-    "Why was the array always so confident? It knew it had all the elements.",
-    "What do you call a programmer from Finland? Nerdic.",
-    "Why did the database administrator break up with their partner? They couldn't establish a connection.",
-    "Why was the computer cold? It left its Windows open.",
-    "Why did the JavaScript function break up? It had too many callbacks.",
-    "Why do programmers prefer dogs over cats? Dogs are loyal, but cats act like they don’t exist until called."
+@bot.tree.command(name="joke", description="Get a random joke of a selected type")
+@app_commands.describe(category="Choose the joke category")
+@app_commands.choices(
+    category=[
+        app_commands.Choice(name="Programming", value="programming"),
+        app_commands.Choice(name="Miscellaneous", value="Miscellaneous"),
+        app_commands.Choice(name="Dark", value="Dark"),
+        app_commands.Choice(name="Pun", value="Pun"),
+        app_commands.Choice(name="Spooky", value="Spooky"),
+        app_commands.Choice(name="Christmas", value="Christmas")
     ]
+)
+async def get_joke(interaction: discord.Interaction, category: app_commands.Choice[str]):
+    date = datetime.now()
 
+    category_urls = {
+        "programming":    "https://v2.jokeapi.dev/joke/Programming",
+        "Miscellaneous":  "https://v2.jokeapi.dev/joke/Miscellaneous",
+        "Dark":           "https://v2.jokeapi.dev/joke/Dark",
+        "Pun":            "https://v2.jokeapi.dev/joke/Pun",
+        "Spooky":          "https://v2.jokeapi.dev/joke/Spooky",
+        "Christmas":       "https://v2.jokeapi.dev/joke/Christmas"
+    }
 
-    random_joke = random.choice(jokes)
+    URL = category_urls.get(category.value)
+    if not URL:
+        
+        await interaction.response.send_message("Invalid category!", ephemeral=True)
+        return
 
-    embed = discord.Embed(
-        title="🌟 Random Joke",
-        description=f"**{random_joke}**",
-        color=discord.Color.blurple()  # You can customize the color
-    )
+    # Defer early because we'll make a network call that could take >3s
+    await interaction.response.defer()
 
-    # Send the embed
-    await interaction.response.send_message(embed=embed)
+    timeout = aiohttp.ClientTimeout(total=6) 
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(URL) as response:
+                if response.status != 200:
+                    await interaction.followup.send("Joke API returned an error. Try again later.", ephemeral=True)
+                    return
+                joke_data = await response.json()
+    except asyncio.TimeoutError:
+        await interaction.followup.send("Joke API timed out. Try again later.", ephemeral=True)
+        return
+    except Exception as e:
+        await interaction.followup.send("An unexpected error occurred while fetching the joke.", ephemeral=True)
+        return
+
+    # Build the embed
+    if joke_data.get("type") == "single":
+        joke = joke_data.get("joke", "No joke found.")
+        embed = discord.Embed(
+            title=f"{category.name} Joke",
+            description=f"```bash\n{joke}\n```",
+            color=discord.Color.blurple()
+        )
+    else:
+        setup = joke_data.get("setup", "…")
+        delivery = joke_data.get("delivery", "…")
+        embed = discord.Embed(
+            title=f"{category.name} Joke",
+            description=(
+                f"```bash\n"
+                f"> {setup}\n\n"
+                f"... thinking ...\n\n"
+                f"> {delivery}\n"
+                f"```"
+            ),
+            color=discord.Color.blurple()
+        )
+
+    try:
+        await interaction.followup.send(embed=embed)
+    except Exception as e:
+        print(f"Failed to send followup: {e}")
+        
+    print(f"user {interaction.user.name} used /joke at {date:%Y-%m-%d %H:%M:%S}")
 
 @bot.tree.command(name="fact", description="get some cool facts about programming")
 async def get_random_fact(interaction: discord.Interaction) -> None:
@@ -490,7 +522,7 @@ async def get_random_fact(interaction: discord.Interaction) -> None:
     embed = discord.Embed(
         title="🌟 Random Fact",
         description=f"**{random_fact}**",
-        color=discord.Color.blurple()  # You can customize the color
+        color=discord.Color.blurple()  
     )
 
     
