@@ -421,7 +421,7 @@ async def get_joke(interaction: discord.Interaction, category: app_commands.Choi
     category_urls = {
         "programming":    "https://v2.jokeapi.dev/joke/Programming",
         "Miscellaneous":  "https://v2.jokeapi.dev/joke/Miscellaneous",
-        "Dark":           "https://v2.jokeapi.dev/joke/Dark",
+        "Dark":           "https://v2.jokeapi.dev/joke/Dark?blacklistFlags=nsfw", # add nsfw filter to get clean jokes 
         "Pun":            "https://v2.jokeapi.dev/joke/Pun",
         "Spooky":          "https://v2.jokeapi.dev/joke/Spooky",
         "Christmas":       "https://v2.jokeapi.dev/joke/Christmas"
@@ -478,55 +478,32 @@ async def get_joke(interaction: discord.Interaction, category: app_commands.Choi
         await interaction.followup.send(embed=embed)
     except Exception as e:
         print(f"Failed to send followup: {e}")
-        
+
     print(f"user {interaction.user.name} used /joke at {date:%Y-%m-%d %H:%M:%S}")
 
-@bot.tree.command(name="fact", description="get some cool facts about programming")
-async def get_random_fact(interaction: discord.Interaction) -> None:
-    random_facts = [
-    "The first computer programmer was Ada Lovelace in the 1840s, even before computers existed as we know them.",
-    "The first high-level programming language was Fortran, developed in 1957.",
-    "Python is named after Monty Python, not the snake.",
-    "The first computer bug was an actual moth found in a Harvard Mark II computer in 1947.",
-    "The term 'debugging' was popularized by Grace Hopper, inspired by the incident with the moth.",
-    "JavaScript was created in just 10 days by Brendan Eich in 1995.",
-    "There are over 700 programming languages in existence today.",
-    "The world's first website is still online. It was created by Tim Berners-Lee in 1991.",
-    "The programming language 'C' was developed in 1972 by Dennis Ritchie at Bell Labs.",
-    "The '@' symbol in email addresses was chosen by Ray Tomlinson in 1971.",
-    "Linux, one of the most popular open-source operating systems, was created by Linus Torvalds in 1991.",
-    "HTML is not a programming language; it’s a markup language.",
-    "COBOL, a language developed in 1959, is still used by many banks and businesses today.",
-    "The first video game, 'Pong,' was programmed in 1972.",
-    "Git, a version control system, was created by Linus Torvalds in 2005.",
-    "Over 70% of developers use JavaScript, making it the most popular language in the world.",
-    "The first mobile app was a simple calculator, released in 1994 on the IBM Simon Personal Communicator.",
-    "PHP originally stood for 'Personal Home Page' but now stands for 'PHP: Hypertext Preprocessor.'",
-    "The longest codebase in the world belongs to Google, with over 2 billion lines of code.",
-    "The average salary for a software developer varies widely, but top developers often earn six figures annually.",
-    "The first search engine was called 'Archie,' created in 1990.",
-    "The Turing Test, created by Alan Turing, determines if a machine exhibits human-like intelligence.",
-    "Java and JavaScript are not the same; they’re completely different programming languages.",
-    "The 'Hello, World!' program is often the first program written by people learning a new language.",
-    "Stack Overflow is the most visited site by programmers, second only to Google.",
-    "The average software developer writes about 10–20 lines of production code per day.",
-    "Hackers once took control of a Jeep Cherokee via its infotainment system in 2015, highlighting the importance of secure code.",
-    "The most common password in the world is still '123456.'",
-    "GitHub was acquired by Microsoft in 2018 for $7.5 billion.",
-    "The most expensive software ever built is the US Department of Defense's F-35 fighter jet software."
-    ]
+@bot.tree.command(name="fact", description="Get a random interesting fact!")
+async def get_fact(interaction: discord.Interaction):
 
+    url = "https://uselessfacts.jsph.pl/api/v2/facts/random"
 
-    random_fact = random.choice(random_facts)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status != 200:
+                return await interaction.response.send_message(
+                    "Couldn't fetch a fact right now 😢", ephemeral=True
+                )
+            print("response status:", response.status)
+            data = await response.json()
+            fact = data["text"]
 
-    embed = discord.Embed(
-        title="🌟 Random Fact",
-        description=f"**{random_fact}**",
-        color=discord.Color.blurple()  
-    )
+            embed = discord.Embed(
+                title="📘 Random Fact",
+                description=f"```md\n{fact}\n```",
+                color=discord.Color.green()
+            )
 
-    
-    await interaction.response.send_message(embed=embed)
+            await interaction.response.send_message(embed=embed)
+
 
 if __name__ == '__main__':
     bot.run(TOKEN)
