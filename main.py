@@ -13,8 +13,7 @@ from roles import roles_embed, ButtonsView
 bot = commands.Bot(command_prefix="!" ,intents=discord.Intents.all())
 load_dotenv()
 
-#TOKEN = os.getenv("TOKEN") # Main Bot Token
-TOKEN= os.getenv("TEST_TOKEN") # Test Bot Token
+TOKEN = os.getenv("TOKEN") # Main Bot Token
 POLL_DATA_FILE = "polls.json"
 TARGET_CHANNEL_ID: str | None = int(os.getenv("TARGET_CHANNEL_ID")) # to change its name to members count
 JOKES_API = "https://v2.jokeapi.dev/joke/"
